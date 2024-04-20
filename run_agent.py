@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import pickle
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 from minerl.herobraine.env_specs.human_survival_specs import HumanSurvival
 
 from agent import MineRLAgent, ENV_KWARGS
