@@ -3,6 +3,8 @@ import torch as th
 import cv2
 from gym3.types import DictType
 from gym import spaces
+import os
+import datetime
 
 from lib.action_mapping import CameraHierarchicalMapping
 from lib.actions import ActionTransformer
@@ -80,6 +82,11 @@ TARGET_ACTION_SPACE = {
     "use": spaces.Discrete(2)
 }
 
+# Initialize the previous timestamp outside the function
+previous_save_time = None
+# Ensure the images directory exists
+os.makedirs("images", exist_ok=True)
+os.makedirs("images/resized", exist_ok=True)
 
 def validate_env(env):
     """Check that the MineRL environment is setup correctly, and raise if not"""
@@ -144,7 +151,30 @@ class MineRLAgent:
 
         Returns torch tensors.
         """
+
+        global previous_save_time
+
+        # Save the image
+        current_time = datetime.datetime.now()
+        timestamp = current_time.strftime("%Y%m%d-%H%M%S%f")[:-3]  # Slicing to include milliseconds
+        
+        # Original image
+        # filename = f"images/{timestamp}.jpg"
+        # cv2.imwrite(filename, cv2.cvtColor(minerl_obs["pov"], cv2.COLOR_RGB2BGR))
+
+        # Calculate time difference and append it to a file in CSV format
+        if previous_save_time is not None:
+            time_difference = (current_time - previous_save_time).total_seconds()
+            with open("image_save_interval.csv", "a") as f:  # 'a' mode for appending
+                f.write(f"{timestamp},{time_difference}\n")
+        previous_save_time = current_time
+
         agent_input = resize_image(minerl_obs["pov"], AGENT_RESOLUTION)[None]
+
+        # Save the resized image
+        # filename_resized = f"images/resized/{timestamp}.jpg"
+        # cv2.imwrite(filename_resized, cv2.cvtColor(agent_input[0], cv2.COLOR_RGB2BGR))
+
         agent_input = {"img": th.from_numpy(agent_input).to(self.device)}
         return agent_input
 
